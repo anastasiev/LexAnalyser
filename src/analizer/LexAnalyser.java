@@ -273,6 +273,7 @@ public class LexAnalyser {
         }
     }
 
+
     public void analyse(Receiver receiver) throws IOException {
         String str = null;
         while((str=receiver.getString()) != null){

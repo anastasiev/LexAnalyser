@@ -22,6 +22,7 @@ public class DataReceiver implements Receiver{
         }
     }
 
+
     public void close(){
         if(bufferedReader != null)
             try {
