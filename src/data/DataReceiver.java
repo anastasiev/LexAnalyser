@@ -46,3 +46,4 @@ public class DataReceiver implements Receiver{
         return bufferedReader.readLine();
     }
 }
+

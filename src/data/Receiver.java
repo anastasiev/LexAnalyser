@@ -8,3 +8,4 @@ import java.io.IOException;
 public interface Receiver {
     public String getString() throws IOException;
 }
+

@@ -25,3 +25,4 @@ public class Delimeters {
     public static final String POWER = "^";
     public static final String GRID = "#";
 }
+
