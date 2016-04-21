@@ -3,6 +3,7 @@ package analizer;
 import constants.ComentSymbols;
 import constants.Delimeters;
 import constants.KeyWords;
+import data.CharReader;
 import data.Receiver;
 import exceptions.InvalidIDException;
 
@@ -17,36 +18,7 @@ import java.util.HashMap;
 
 //Tests!!!!!!!
 
-public class LexAnalyser {
-
-    private HashMap<String, Integer> keyWordTable;
-    private HashMap<String, Integer> constantTable;
-    private HashMap<String, Integer> identTable;
-    private HashMap<String, Integer> singleSymTable;
-    private HashMap<String, Integer> doubleSymTable;
-
-    public HashMap<String, Integer> getKeyWordTable() {
-        return keyWordTable;
-    }
-
-    public HashMap<String, Integer> getConstantTable() {
-        return constantTable;
-    }
-
-    public HashMap<String, Integer> getIdentTable() {
-        return identTable;
-    }
-
-    public HashMap<String, Integer> getSingleSymTable() {
-        return singleSymTable;
-    }
-
-    public HashMap<String, Integer> getDoubleSymTable() {
-        return doubleSymTable;
-    }
-
-
-
+public class LexAnalyser extends Analyser{
     private int lastConstantCode = 500;
     private int lastIdentCode = 1000;
 
@@ -55,18 +27,13 @@ public class LexAnalyser {
 
     private boolean commentFlag = false;
 
-    private ArrayList<Lexem> lexems = new ArrayList<>();
-
-    public ArrayList<Lexem> getLexems() {
-        return lexems;
-    }
-
     public LexAnalyser(){
         keyWordTable = new HashMap<>();
         constantTable = new HashMap<>();
         identTable = new HashMap<>();
         singleSymTable = new HashMap<>();
         doubleSymTable = new HashMap<>();
+        lexems = new ArrayList<>();
 
         keyWordTable.put(KeyWords.BEGIN, ++lastKeyWordCode);
         keyWordTable.put(KeyWords.END, ++lastKeyWordCode);
@@ -111,6 +78,8 @@ public class LexAnalyser {
         singleSymTable.put(Delimeters.RBRACKET, Integer.valueOf(Delimeters.RBRACKET.charAt(0)));
         singleSymTable.put(Delimeters.POWER, Integer.valueOf(Delimeters.POWER.charAt(0)));
         singleSymTable.put(Delimeters.GRID, Integer.valueOf(Delimeters.GRID.charAt(0)));
+        singleSymTable.put(Delimeters.SQUARE_BRACKET_B, Integer.valueOf(Delimeters.SQUARE_BRACKET_B.charAt(0)));
+        singleSymTable.put(Delimeters.SQUARE_BRACKET_E, Integer.valueOf(Delimeters.SQUARE_BRACKET_E.charAt(0)));
     }
     //
     private boolean isLet(char c){
@@ -118,6 +87,7 @@ public class LexAnalyser {
             return true;
         return false;
     }
+
     //
     private boolean isNum(char c){
         if(c >= 48 && c <=57)
@@ -126,7 +96,7 @@ public class LexAnalyser {
     }
     //
     private boolean isSpaces(char c){
-        if(c == 32 || c == 9 || c == 11)
+        if(c == 32 || c == 9 || c == 11 || c == 10 || c == 13)
             return true;
         return false;
     }
@@ -140,18 +110,18 @@ public class LexAnalyser {
     }
 
     //
-    private String makeWord(ArrayList<Character> line){
+    private String makeWord(CharReader line){
         StringBuilder builder = new StringBuilder();
 
-        while(!line.isEmpty() && (isLet(line.get(0)) || isNum(line.get(0))))
-            builder.append(line.remove(0));
+        while(!line.isEmpty() && (isLet(line.get()) || isNum(line.get())))
+            builder.append(line.remove());
 
 
         return builder.toString();
     }
 
     //
-    private String makeNumber(ArrayList<Character> line) throws InvalidIDException{
+    private String makeNumber(CharReader line) throws InvalidIDException{
         String res = makeWord(line);
         for(int i = 0; i<res.length(); i++)
             if(isLet(res.charAt(i))){
@@ -162,63 +132,94 @@ public class LexAnalyser {
 
         return res;
     }
+    //////
+    public String makeExpNumber(CharReader line) throws InvalidIDException{
+        StringBuilder res = new StringBuilder();
+        res.append(makeNumber(line));
+        if(!line.isEmpty() && line.get() == Delimeters.GRID.charAt(0)){
+            res.append(line.remove());
+            if(!line.isEmpty() && (line.get() == Delimeters.ADD.charAt(0) || line.get() == Delimeters.SUB.charAt(0))) {
+                res.append(line.remove() );
+                String str = makeWord(line);
+                if(!str.isEmpty()) {
+                    res.append(str);
+                    boolean isOk = true;
+                    for (int i = 0; i < str.length(); i++) {
+                        if (isLet(str.charAt(i))) {
+                            isOk = false;
+                            break;
+                        }
+                    }
+                    if (isOk)
+                        return res.toString();
+                }
+            }
+        }else{
+            return res.toString();
+        }
+        for(int i = res.length() - 1; i>=0; i--){
+            line.add(res.charAt(i));
+        }
+
+        return null;
+    }
     //
-    private String makeDelimiter(ArrayList<Character> line){
+    private String makeDelimiter(CharReader line){
         if(line.isEmpty())return null;
 
         StringBuilder builder = new StringBuilder();
-        builder.append(line.remove(0));
+        builder.append(line.remove());
         if (!line.isEmpty()){
-            builder.append(line.remove(0));
+            builder.append(line.remove());
             if (isDoubleDelimiter(builder.toString())) return builder.toString();
-            line.add(0,builder.charAt(1));
+            line.add(builder.charAt(1));
             builder.deleteCharAt(1);
         }
 
         if (isSingleDelimiter(builder.toString())) return builder.toString();
-        line.add(0,builder.charAt(0));
+        line.add(builder.charAt(0));
         return null;
     }
     //
-    private boolean isCommentSymbol(ArrayList<Character> line, String symbol){
+    private boolean isCommentSymbol(CharReader line, String symbol){
         StringBuilder builder = new StringBuilder();
-        builder.append(line.remove(0));
+        builder.append(line.remove());
         if (!line.isEmpty()){
-            builder.append(line.remove(0));
+            builder.append(line.remove());
             if(symbol.equalsIgnoreCase(builder.toString()))
                 return true;
-            line.add(0,builder.charAt(1));
-            line.add(0,builder.charAt(0));
+            line.add(builder.charAt(1));
+            line.add(builder.charAt(0));
             return false;
         }
-        line.add(0,builder.charAt(0));
+        line.add(builder.charAt(0));
         return false;
     }
     //
-    private void deleteComment(ArrayList<Character> line){
+    private void deleteComment(CharReader line){
         boolean endCom = false;
         while (!line.isEmpty()){
             if(isCommentSymbol(line, ComentSymbols.ECOM)){
                 endCom = true;
                 break;
             }
-            line.remove(0);
+            line.remove();
         }
         if(endCom)commentFlag = false;
     }
 
 
-    private void seperateLexems(String line){
-        ArrayList<Character> lineChar = new ArrayList<>();
-
-        for(Character c: line.toCharArray())
-            lineChar.add(c);
+    public void analyse(CharReader lineChar){
+//        ArrayList<Character> lineChar = new ArrayList<>();
+//
+//        for(Character c: line.toCharArray())
+//            lineChar.add(c);
 
         if(commentFlag)deleteComment(lineChar);
 
         while (!lineChar.isEmpty()){
             //seperate words
-            if(isLet(lineChar.get(0))){
+            if(isLet(lineChar.get())){
                 String word = makeWord(lineChar);
                 if(keyWordTable.containsKey(word))
                     lexems.add(new Lexem(word, keyWordTable.get(word)));
@@ -229,8 +230,28 @@ public class LexAnalyser {
                 }
                 continue;
             }
+
+            //seperate exp number
+            if(isNum(lineChar.get())){
+                String number = null;
+                try {
+                    number = makeExpNumber(lineChar);
+                    if(number != null) {
+                        if (!constantTable.containsKey(number))
+                            constantTable.put(number, ++lastConstantCode);
+                        lexems.add(new Lexem(number, constantTable.get(number)));
+                    }
+
+                } catch (InvalidIDException e) {
+                    lexems.add(new Lexem(e.getInvalidId(), -1));
+                }finally {
+                    if(number != null)
+                        continue;
+                }
+            }
+
             //seperate constants
-            if(isNum(lineChar.get(0))){
+            if(isNum(lineChar.get())){
                 try {
                     String number = makeNumber(lineChar);
                     if(!constantTable.containsKey(number))
@@ -243,8 +264,8 @@ public class LexAnalyser {
                 }
             }
             //seperate spaces
-            if(isSpaces(lineChar.get(0))){
-                lineChar.remove(0);
+            if(isSpaces(lineChar.get())){
+                lineChar.remove();
                 continue;
             }
 
@@ -268,23 +289,14 @@ public class LexAnalyser {
 
             //unknown symbol
 
-            lexems.add(new Lexem(String.valueOf(lineChar.remove(0)) , -1));
+            lexems.add(new Lexem(String.valueOf(lineChar.remove()) , -1));
 
         }
-    }
-
-
-    public void analyse(Receiver receiver) throws IOException {
-        String str = null;
-        while((str=receiver.getString()) != null){
-            str = str.toUpperCase();
-            seperateLexems(str);
-        }
-
-
         if(commentFlag)
             lexems.add(new Lexem(KeyWords.ERROR, -1));
     }
+
+
 
 
 }

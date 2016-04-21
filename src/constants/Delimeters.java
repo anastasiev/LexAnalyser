@@ -24,5 +24,7 @@ public class Delimeters {
     public static final String RBRACKET = ")";
     public static final String POWER = "^";
     public static final String GRID = "#";
+    public static final String SQUARE_BRACKET_B = "[";
+    public static final String SQUARE_BRACKET_E = "]";
 }
 

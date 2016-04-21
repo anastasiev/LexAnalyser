@@ -33,7 +33,7 @@ public class DataReceiver implements Receiver{
 
     public ArrayList<String> getStringLines() throws IOException {
         ArrayList<String> res = new ArrayList<String>();
-        String str = bufferedReader.readLine();;
+        String str = bufferedReader.readLine();
         while(str != null){
             res.add(str);
             str = bufferedReader.readLine();
@@ -44,6 +44,9 @@ public class DataReceiver implements Receiver{
     @Override
     public String getString() throws IOException {
         return bufferedReader.readLine();
+    }
+    public int read() throws IOException {
+        return bufferedReader.read();
     }
 }
 

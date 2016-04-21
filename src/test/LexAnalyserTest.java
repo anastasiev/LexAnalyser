@@ -1,8 +1,14 @@
 package test;
 
 import analizer.LexAnalyser;
+import data.CharReader;
 import data.DataReceiver;
 import org.junit.Test;
+import org.junit.experimental.theories.suppliers.TestedOn;
+
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 
@@ -14,10 +20,14 @@ public class LexAnalyserTest {
     @Test
     public void testAnalyse() throws Exception {
         LexAnalyser analizer = new LexAnalyser();
-        DataReceiver receiver = new DataReceiver("/home/dmytro/IdeaProjects/LexAnalizer/src/test.txt");
-        receiver.open();
-        analizer.analyse(receiver);
-        receiver.close();
+//        DataReceiver receiver = new DataReceiver("/home/dmytro/IdeaProjects/LexAnalyserServer/src/test.sgn");
+//        receiver.open();
+//        analizer.analyse(receiver);
+//        receiver.close();
+        InputStreamReader inp = new InputStreamReader(
+                new FileInputStream("/home/dmytro/IdeaProjects/LexAnalyserServer/src/test.sgn"));
+        CharReader reader = new CharReader(inp);
+        analizer.analyse(reader);
         System.out.println(analizer.getLexems());
 
         System.out.println(analizer.getConstantTable());
@@ -25,5 +35,18 @@ public class LexAnalyserTest {
         System.out.println(analizer.getKeyWordTable());
         System.out.println(analizer.getSingleSymTable());
         System.out.println(analizer.getDoubleSymTable());
+    }
+
+
+    @Test
+    public void readerTest() throws Exception{
+        // -32
+        System.out.println((int)'a');
+        System.out.println((int)'z');
+        DataReceiver receiver = new DataReceiver("/home/dmytro/IdeaProjects/LexAnalyserServer/src/test1.sgn");
+        receiver.open();
+        System.out.println(receiver.read());
+        System.out.println(receiver.read());
+        receiver.close();
     }
 }
